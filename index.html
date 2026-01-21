@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GROMICA - MD Simulation Visualization Tool</title>
+    <meta name="description" content="Free web-based tool for GROMACS MD simulation analysis. Visualize RMSD, RMSF, SASA, Radius of Gyration, and Hydrogen Bonds without coding.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+
+        .hero .subtitle {
+            font-size: 24px;
+            margin-bottom: 15px;
+            opacity: 0.95;
+        }
+
+        .hero .description {
+            font-size: 18px;
+            max-width: 700px;
+            margin: 0 auto 40px;
+            opacity: 0.9;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 35px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 80px 20px;
+            background: #f8f9fa;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 50px;
+            color: #1a1a1a;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .feature-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .feature-card h3 {
+            font-size: 22px;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.7;
+        }
+
+        /* Analyses Section */
+        .analyses {
+            padding: 80px 20px;
+            background: white;
+        }
+
+        .analyses-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .analysis-item {
+            padding: 25px;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+        }
+
+        .analysis-item h3 {
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 20px;
+        }
+
+        .analysis-item p {
+            color: #555;
+            font-size: 14px;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 80px 20px;
+            background: #f8f9fa;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .step {
+            text-align: center;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 auto 20px;
+        }
+
+        .step h3 {
+            margin-bottom: 10px;
+            color: #1a1a1a;
+        }
+
+        .step p {
+            color: #666;
+        }
+
+        /* Screenshot placeholder */
+        .screenshot {
+            margin: 50px 0;
+            text-align: center;
+        }
+
+        .screenshot-placeholder {
+            background: linear-gradient(135deg, #667eea20, #764ba220);
+            border: 2px dashed #667eea;
+            border-radius: 12px;
+            padding: 60px;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .cta-section p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        /* Footer */
+        footer {
+            background: #1a1a1a;
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .footer-links {
+            margin-top: 20px;
+        }
+
+        .footer-links a {
+            color: #667eea;
+            text-decoration: none;
+            margin: 0 15px;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 36px;
+            }
+            
+            .hero .subtitle {
+                font-size: 20px;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+
+            .section-title {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>🧬 GROMICA</h1>
+        <p class="subtitle">MD Simulation Visualization Made Simple</p>
+        <p class="description">
+            Analyze RMSD, RMSF, SASA, Radius of Gyration, and Hydrogen Bonds from your GROMACS simulations — no coding required
+        </p>
+        <div class="cta-buttons">
+            <a href="https://hafeez-dawar-gromica.hf.space" class="btn btn-primary" target="_blank">
+                🚀 Launch GROMICA
+            </a>
+            <a href="https://huggingface.co/spaces/Hafeez-Dawar/GROMICA" class="btn btn-secondary" target="_blank">
+                📚 View on Hugging Face
+            </a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">Why Choose GROMICA?</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Lightning Fast</h3>
+                    <p>Upload your XVG files and get publication-quality plots in seconds. No installation, no setup.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <h3>Customizable</h3>
+                    <p>Choose colors, adjust resolution, highlight specific residues, and export in PNG, PDF, or SVG.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Multi-File Analysis</h3>
+                    <p>Compare multiple trajectories side-by-side with automatic color coding and statistics.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔬</div>
+                    <h3>Comprehensive</h3>
+                    <p>Five essential MD analyses in one unified interface — everything you need for trajectory analysis.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💯</div>
+                    <h3>Publication Ready</h3>
+                    <p>High-resolution exports with professional styling, perfect for papers and presentations.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🆓</div>
+                    <h3>Free & Open</h3>
+                    <p>Completely free to use. No subscriptions, no limitations, no hidden costs.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analyses Section -->
+    <section class="analyses">
+        <div class="container">
+            <h2 class="section-title">Supported Analyses</h2>
+            <div class="analyses-list">
+                <div class="analysis-item">
+                    <h3>📈 RMSD</h3>
+                    <p>Root Mean Square Deviation for protein stability analysis. Supports both whole protein and protein-ligand complexes.</p>
+                </div>
+                <div class="analysis-item">
+                    <h3>📊 RMSF</h3>
+                    <p>Root Mean Square Fluctuation to identify flexible regions. Includes residue highlighting feature.</p>
+                </div>
+                <div class="analysis-item">
+                    <h3>🔵 Radius of Gyration</h3>
+                    <p>Measure protein compactness and structural changes over time.</p>
+                </div>
+                <div class="analysis-item">
+                    <h3>💧 SASA</h3>
+                    <p>Solvent Accessible Surface Area to analyze protein-solvent interactions.</p>
+                </div>
+                <div class="analysis-item">
+                    <h3>🔗 Hydrogen Bonds</h3>
+                    <p>Track hydrogen bond formation and stability throughout your simulation.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">How It Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Upload</h3>
+                    <p>Upload your GROMACS XVG file(s)</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Customize</h3>
+                    <p>Choose colors and settings</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Analyze</h3>
+                    <p>View instant plots and statistics</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h3>Export</h3>
+                    <p>Download publication-ready figures</p>
+                </div>
+            </div>
+            
+            <div class="screenshot">
+                <div class="screenshot-placeholder">
+                    📸 Screenshot Coming Soon
+                    <br><br>
+                    <small>(Add a screenshot of GROMICA here later)</small>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Ready to Visualize Your Simulations?</h2>
+            <p>Join researchers worldwide who are saving time with GROMICA</p>
+            <a href="https://hafeez-dawar-gromica.hf.space" class="btn btn-primary" target="_blank">
+                Get Started Now — It's Free!
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 GROMICA. Built for the MD simulation community.</p>
+            <div class="footer-links">
+                <a href="mailto:hafeez@nwafu.edu.cn">Contact</a>
+                <a href="https://huggingface.co/spaces/Hafeez-Dawar/GROMICA" target="_blank">Hugging Face</a>
+                <a href="https://github.com/Hafeez-Dawar" target="_blank">GitHub</a>
+            </div>
+            <p style="margin-top: 20px; font-size: 14px; opacity: 0.7;">
+                Developed by Hafeez Ur Rehman | Northwest A&F University
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Sitemap: https://hafeez-dawar.github.io/GROMICA/sitemap.xml
+
+# Allow all major search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /

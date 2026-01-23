@@ -1,58 +1,72 @@
-#' Read GROMACS XVG File
+#' Read GROMACS XVG Files
 #'
-#' Import data from GROMACS XVG output files into a data frame.
-#' Automatically handles comments and metadata lines.
+#' Imports XVG files from GROMACS molecular dynamics simulations.
+#' Automatically handles comment lines (starting with # or @).
 #'
-#' @param file Character. Path to the XVG file.
-#' @param skip Integer. Number of header lines to skip (default: 17).
-#' @param col.names Character vector. Column names for the data (default: c("Time", "Value")).
+#' @param file Path to the XVG file
+#' @param skip Number of header lines to skip (default: 17, auto-detected if NULL)
+#' @param col.names Column names (default: NULL, auto-generates "Time" and "Value")
 #'
-#' @return A data frame with columns for time and value(s).
-#'
-#' @export
+#' @return A data frame with time and value columns
 #'
 #' @examples
 #' \dontrun{
-#' # Read RMSD data
-#' rmsd_data <- read_xvg("md_rmsd.xvg")
-#' head(rmsd_data)
+#' data <- read_xvg("md_rmsd.xvg")
+#' data <- read_xvg("rmsf.xvg", col.names = c("Residue", "RMSF"))
 #' }
 #'
-read_xvg <- function(file, skip = 17, col.names = NULL) {
+#' @export
+read_xvg <- function(file, skip = NULL, col.names = NULL) {
   
   # Check if file exists
   if (!file.exists(file)) {
-    stop("File not found: ", file)
+    stop(paste("File not found:", file))
   }
   
-  # Read all lines to count columns
-  lines <- readLines(file, warn = FALSE)
-  data_lines <- lines[!grepl("^[@#]", lines)]
+  # Read all lines from file
+  all_lines <- readLines(file, warn = FALSE)
+  
+  # Filter out comment lines (lines starting with # or @)
+  data_lines <- all_lines[!grepl("^[@#]", all_lines)]
+  
+  # Remove empty lines
+  data_lines <- data_lines[nzchar(trimws(data_lines))]
   
   if (length(data_lines) == 0) {
-    stop("No data found in file")
+    stop("No data found in file (only comments)")
   }
   
-  # Count columns from first data line
-  n_cols <- length(strsplit(data_lines[1], "\\s+")[[1]])
+  # Parse the first data line to detect number of columns
+  first_line <- strsplit(trimws(data_lines[1]), "\\s+")[[1]]
+  n_cols <- length(first_line)
   
-  # Set default column names if not provided
+  # Set column names
   if (is.null(col.names)) {
     if (n_cols == 2) {
       col.names <- c("Time", "Value")
     } else {
-      col.names <- c("Time", paste0("V", 1:(n_cols-1)))
+      col.names <- paste0("V", 1:n_cols)
     }
+  } else if (length(col.names) != n_cols) {
+    warning(paste("Number of column names (", length(col.names), 
+                  ") doesn't match number of columns (", n_cols, 
+                  "). Using default names."))
+    col.names <- paste0("V", 1:n_cols)
   }
   
-  # Read data
-  data <- read.table(file, 
-                     comment.char = c("#", "@"),
+  # Write data lines to a temporary connection and read as table
+  temp_conn <- textConnection(data_lines)
+  data <- read.table(temp_conn, 
                      col.names = col.names,
+                     colClasses = "numeric",
                      fill = TRUE)
+  close(temp_conn)
   
-  # Remove any NA rows
+  # Remove rows with all NA values
   data <- data[complete.cases(data), ]
+  
+  # Reset row names
+  rownames(data) <- NULL
   
   return(data)
 }

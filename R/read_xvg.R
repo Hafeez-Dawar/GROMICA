@@ -70,3 +70,10 @@ read_xvg <- function(file, skip = NULL, col.names = NULL) {
   
   return(data)
 }
+```
+
+6. **Scroll down** to "Commit changes"
+
+7. **Type** commit message:
+```
+   Fix: Corrected comment.char bug in read_xvg()

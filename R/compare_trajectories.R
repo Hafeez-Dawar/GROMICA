@@ -66,7 +66,7 @@ compare_trajectories <- function(files,
   
   # Set default axis labels based on analysis type
   if (is.null(xlab)) {
-    xlab <- if (analysis_type == "rmsf") "Residue Number" else "Time (ps)"
+    xlab <- if (analysis_type == "rmsf") "Residue Number" else "Time (ns)"
   }
   
   if (is.null(ylab)) {
@@ -94,7 +94,7 @@ compare_trajectories <- function(files,
   combined_data <- data.frame()
   
   for (i in 1:length(files)) {
-    # Read XVG file
+    # Read XVG file using the fixed read_xvg function
     temp_data <- read_xvg(files[i])
     
     # Add trajectory label
@@ -136,3 +136,10 @@ compare_trajectories <- function(files,
   
   return(p)
 }
+```
+
+7. **Scroll down** to "Commit changes"
+
+8. **Type** commit message:
+```
+   Fix: Updated compare_trajectories to use fixed read_xvg

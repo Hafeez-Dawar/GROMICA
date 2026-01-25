@@ -4,12 +4,12 @@
 #' @param color Line color (default: "green")
 #' @param title Plot title (default: "Radius of Gyration Analysis")
 #' @param show_stats Show statistics overlay (default: FALSE)
-#' @param xlab X-axis label (default: "Time (ps)")
+#' @param xlab X-axis label (default: "Time (ns)")
 #' @param ylab Y-axis label (default: "Rg (nm)")
 #' @return ggplot2 object
 #' @export
 #' @importFrom ggplot2 ggplot aes geom_line labs theme_classic theme element_text annotate
-plot_rg <- function(data, color = "green", title = "Radius of Gyration Analysis", show_stats = FALSE, xlab = "Time (ps)", ylab = "Rg (nm)") {
+plot_rg <- function(data, color = "green", title = "Radius of Gyration Analysis", show_stats = FALSE, xlab = "Time (ns)", ylab = "Rg (nm)") {
   if (ncol(data) < 2) stop("Data must have at least 2 columns")
   colnames(data)[1:2] <- c("Time", "Rg")
   p <- ggplot2::ggplot(data, ggplot2::aes(x = Time, y = Rg)) +

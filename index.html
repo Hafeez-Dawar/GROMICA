@@ -598,75 +598,146 @@
             font-size: 15px;
         }
 
-        /* How It Works */
-        .how-it-works {
+        /* Team Section */
+        .team {
             padding: 130px 5%;
             background: linear-gradient(135deg, var(--slate) 0%, var(--dark) 100%);
             position: relative;
             overflow: hidden;
         }
 
-        .steps-container {
-            max-width: 1300px;
+        .team-container {
+            max-width: 1400px;
             margin: 65px auto 0;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 45px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 35px;
         }
 
-        .step {
-            text-align: center;
+        .team-member {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
         }
 
-        .step-number {
-            width: 88px;
-            height: 88px;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-            font-weight: 900;
-            margin: 0 auto 28px;
-            box-shadow: 0 12px 45px rgba(99, 102, 241, 0.45);
-            position: relative;
-            font-family: 'Space Grotesk', sans-serif;
+        .team-member.founder {
+            border: 2px solid rgba(99, 102, 241, 0.4);
+            box-shadow: 0 10px 40px rgba(99, 102, 241, 0.2);
         }
 
-        .step-number::before {
-            content: '';
-            position: absolute;
+        .member-image {
+            width: 100%;
+            height: 260px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .member-image img {
             width: 100%;
             height: 100%;
-            border-radius: 50%;
-            border: 3px solid rgba(99, 102, 241, 0.5);
-            animation: ripple 2.5s infinite;
+            object-fit: cover;
+            transition: transform 0.5s ease;
         }
 
-        @keyframes ripple {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            100% {
-                transform: scale(1.6);
-                opacity: 0;
-            }
+        .team-member:hover .member-image img {
+            transform: scale(1.08);
         }
 
-        .step h3 {
-            font-size: 24px;
+        .member-image::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60%;
+            background: linear-gradient(to top, rgba(15, 23, 42, 0.95), transparent);
+        }
+
+        .founder-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            z-index: 2;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .member-info {
+            padding: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .member-info h3 {
+            font-size: 22px;
             font-weight: 800;
-            margin-bottom: 16px;
-            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+            color: #fff;
+            letter-spacing: -0.3px;
         }
 
-        .step p {
-            color: rgba(255, 255, 255, 0.65);
-            line-height: 1.75;
-            font-size: 16px;
+        .member-affiliation {
+            color: #a5b4fc;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            letter-spacing: 0.3px;
+        }
+
+        .member-email {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            margin-bottom: 15px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        .member-bio {
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.65;
+            margin-bottom: 20px;
+            font-size: 14px;
+            min-height: 80px;
+        }
+
+        .member-links {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .member-links a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 6px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .member-links a:hover {
+            color: #fff;
+            border-color: #6366f1;
+            background: rgba(99, 102, 241, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .team-member:hover {
+            transform: translateY(-10px);
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.2);
         }
 
         /* Animations */
@@ -693,6 +764,13 @@
         }
 
         /* Responsive */
+        @media (max-width: 1024px) {
+            .team-container {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 30px;
+            }
+        }
+
         @media (max-width: 768px) {
             nav {
                 padding: 16px 5%;
@@ -716,8 +794,24 @@
 
             .features-grid,
             .analyses-grid,
-            .steps-container {
+            .team-container {
                 grid-template-columns: 1fr;
+            }
+
+            .team-container {
+                gap: 25px;
+            }
+            
+            .member-image {
+                height: 220px;
+            }
+            
+            .member-info {
+                padding: 25px;
+            }
+            
+            .member-info h3 {
+                font-size: 20px;
             }
 
             .orb {
@@ -745,6 +839,14 @@
             .btn {
                 padding: 17px 38px;
                 font-size: 16px;
+            }
+
+            .team-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .member-bio {
+                min-height: auto;
             }
         }
 
@@ -784,7 +886,7 @@
             <div class="nav-links">
                 <a href="#features">Features</a>
                 <a href="#analyses">Analyses</a>
-                <a href="#how-it-works">How It Works</a>
+                <a href="#team">Our Team</a>
                 <a href="https://hafeez-dawar-gromica.hf.space" target="_blank" class="nav-cta">Launch App</a>
             </div>
         </div>
@@ -931,39 +1033,111 @@
         </div>
     </section>
 
-    <!-- How It Works -->
-    <section id="how-it-works" class="how-it-works">
+    <!-- Team Section -->
+    <section id="team" class="team">
         <div class="section-header">
-            <span class="section-tag">Simple Workflow</span>
-            <h2 class="section-title">From Data to Publication in 4 Steps</h2>
+            <span class="section-tag">Our Team</span>
+            <h2 class="section-title">Meet the Minds Behind GROMICA</h2>
             <p class="section-description">
-                Streamlined process designed for maximum efficiency
+                A collaborative effort from passionate researchers dedicated to advancing computational biology
             </p>
         </div>
 
-        <div class="steps-container">
-            <div class="step">
-                <div class="step-number">1</div>
-                <h3>Upload Your Data</h3>
-                <p>Drop your GROMACS XVG files — single trajectory or multiple comparisons</p>
+        <div class="team-container">
+            <!-- Founder -->
+            <div class="team-member founder">
+                <div class="member-image">
+                    <!-- Replace with actual image path -->
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400&q=80" alt="Hafeez Ur Rehman">
+                    <div class="founder-badge">Founder</div>
+                </div>
+                <div class="member-info">
+                    <h3>Hafeez Ur Rehman</h3>
+                    <p class="member-affiliation">Northwest A&F University</p>
+                    <p class="member-email">hafeez@nwafu.edu.cn</p>
+                    <p class="member-bio">PhD candidate in Computational Biology with expertise in molecular dynamics simulation, visualization, and bioinformatics tool development.</p>
+                    <div class="member-links">
+                        <a href="https://github.com/hafeez-dawar" target="_blank">GitHub</a>
+                        <a href="https://linkedin.com" target="_blank">LinkedIn</a>
+                        <a href="mailto:hafeez@nwafu.edu.cn">Email</a>
+                    </div>
+                </div>
             </div>
 
-            <div class="step">
-                <div class="step-number">2</div>
-                <h3>Customize Settings</h3>
-                <p>Choose colors, resolution, and analysis-specific parameters in seconds</p>
+            <!-- Team Member 2 -->
+            <div class="team-member">
+                <div class="member-image">
+                    <!-- Replace with actual image path -->
+                    <img src="https://images.unsplash.com/photo-1531384441138-2736e62e0919?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400&q=80" alt="Mingzhi Liao">
+                </div>
+                <div class="member-info">
+                    <h3>Mingzhi Liao</h3>
+                    <p class="member-affiliation">Northwest A&F University</p>
+                    <p class="member-email">liao@nwafu.edu.cn</p>
+                    <p class="member-bio">Researcher specializing in structural biology and computational chemistry, contributing to algorithm development and validation.</p>
+                    <div class="member-links">
+                        <a href="#" target="_blank">GitHub</a>
+                        <a href="#" target="_blank">LinkedIn</a>
+                        <a href="mailto:liao@nwafu.edu.cn">Email</a>
+                    </div>
+                </div>
             </div>
 
-            <div class="step">
-                <div class="step-number">3</div>
-                <h3>Generate Plots</h3>
-                <p>Instant visualization with comprehensive statistics and insights</p>
+            <!-- Team Member 3 -->
+            <div class="team-member">
+                <div class="member-image">
+                    <!-- Replace with actual image path -->
+                    <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400&q=80" alt="Amber Afroz">
+                </div>
+                <div class="member-info">
+                    <h3>Amber Afroz</h3>
+                    <p class="member-affiliation">University of Gujrat</p>
+                    <p class="member-email">amber@uog.edu.pk</p>
+                    <p class="member-bio">Expert in protein biochemistry and molecular modeling, providing critical insights into biological validation and application.</p>
+                    <div class="member-links">
+                        <a href="#" target="_blank">GitHub</a>
+                        <a href="#" target="_blank">LinkedIn</a>
+                        <a href="mailto:amber@uog.edu.pk">Email</a>
+                    </div>
+                </div>
             </div>
 
-            <div class="step">
-                <div class="step-number">4</div>
-                <h3>Export & Publish</h3>
-                <p>Download high-resolution figures ready for journals and presentations</p>
+            <!-- Team Member 4 -->
+            <div class="team-member">
+                <div class="member-image">
+                    <!-- Replace with actual image path -->
+                    <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400&q=80" alt="Naeem Mahmood Ashraf">
+                </div>
+                <div class="member-info">
+                    <h3>Naeem Mahmood Ashraf</h3>
+                    <p class="member-affiliation">University of the Punjab</p>
+                    <p class="member-email">naeem@pu.edu.pk</p>
+                    <p class="member-bio">Senior researcher in bioinformatics and computational biology, contributing to methodology development and peer review.</p>
+                    <div class="member-links">
+                        <a href="#" target="_blank">GitHub</a>
+                        <a href="#" target="_blank">LinkedIn</a>
+                        <a href="mailto:naeem@pu.edu.pk">Email</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team Member 5 -->
+            <div class="team-member">
+                <div class="member-image">
+                    <!-- Replace with actual image path -->
+                    <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400&q=80" alt="Nauman Khan">
+                </div>
+                <div class="member-info">
+                    <h3>Nauman Khan</h3>
+                    <p class="member-affiliation">Northwest A&F University</p>
+                    <p class="member-email">khan@nwafu.edu.cn</p>
+                    <p class="member-bio">Specialist in data visualization and scientific computing, focusing on user interface design and performance optimization.</p>
+                    <div class="member-links">
+                        <a href="#" target="_blank">GitHub</a>
+                        <a href="#" target="_blank">LinkedIn</a>
+                        <a href="mailto:khan@nwafu.edu.cn">Email</a>
+                    </div>
+                </div>
             </div>
         </div>
     </section>

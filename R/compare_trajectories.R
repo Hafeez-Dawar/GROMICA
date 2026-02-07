@@ -32,35 +32,25 @@ compare_trajectories <- function(files, labels = NULL, colors = NULL,
     colors <- default_colors[seq_along(files)]
   }
   
-  # FIXED: Auto-detect analysis_type from ALL files, not just first
+  # FIXED: Check ALL files for "gyrate" in filename
+  # This is the CRITICAL FIX for your issue
   if (is.null(analysis_type)) {
-    # Check ALL files for analysis type patterns
-    detected_types <- sapply(files, .detect_analysis_type)
+    # Check if ANY file has "gyrate" or "rg" in the name
+    all_filenames <- paste(basename(files), collapse = " ")
     
-    # Get most common type among all files
-    type_counts <- table(detected_types)
-    most_common <- names(type_counts)[which.max(type_counts)]
-    
-    # Use the most common type, or default to first if ambiguous
-    if (most_common != "unknown" && length(type_counts) > 0) {
-      analysis_type <- most_common
+    if (grepl("gyrate|rg", all_filenames, ignore.case = TRUE)) {
+      analysis_type <- "rg"
+    } else if (grepl("rmsd", all_filenames, ignore.case = TRUE)) {
+      analysis_type <- "rmsd"
+    } else if (grepl("rmsf", all_filenames, ignore.case = TRUE)) {
+      analysis_type <- "rmsf"
+    } else if (grepl("sasa", all_filenames, ignore.case = TRUE)) {
+      analysis_type <- "sasa"
+    } else if (grepl("hbond|hydrogen", all_filenames, ignore.case = TRUE)) {
+      analysis_type <- "hbond"
     } else {
-      # If all unknown, check file contents of first file
+      # If no keywords found, check first file's content
       analysis_type <- .detect_from_file_content(files[1])
-    }
-    
-    # If still unknown, default based on filename pattern
-    if (analysis_type == "unknown") {
-      # Check if ANY file has "gyrate" in the name
-      if (any(grepl("gyrate|rg", files, ignore.case = TRUE))) {
-        analysis_type <- "rg"
-      } else if (any(grepl("rmsd", files, ignore.case = TRUE))) {
-        analysis_type <- "rmsd"
-      } else if (any(grepl("rmsf", files, ignore.case = TRUE))) {
-        analysis_type <- "rmsf"
-      } else {
-        analysis_type <- "rmsd"  # Ultimate fallback
-      }
     }
   }
   
@@ -115,69 +105,32 @@ compare_trajectories <- function(files, labels = NULL, colors = NULL,
   return(p)
 }
 
-#' Helper function to detect analysis type from filename
-#' @param file_path Path to the file
-#' @return Analysis type as string
-#' @noRd
-.detect_analysis_type <- function(file_path) {
-  filename <- basename(file_path)
-  filename_lower <- tolower(filename)
-  
-  if (grepl("gyrate|rg|radius", filename_lower)) {
-    return("rg")
-  } else if (grepl("rmsd", filename_lower)) {
-    return("rmsd")
-  } else if (grepl("rmsf", filename_lower)) {
-    return("rmsf")
-  } else if (grepl("sasa", filename_lower)) {
-    return("sasa")
-  } else if (grepl("hbond|hydrogen", filename_lower)) {
-    return("hbond")
-  } else {
-    return("unknown")
-  }
-}
-
 #' Helper function to detect analysis type from file content
 #' @param file_path Path to the file
 #' @return Analysis type as string
 #' @noRd
 .detect_from_file_content <- function(file_path) {
   tryCatch({
-    # Read first few lines to check for headers
     con <- file(file_path, "r")
     first_lines <- readLines(con, n = 20)
     close(con)
     
-    # Check for @ lines in .xvg files
     for (line in first_lines) {
       line_lower <- tolower(line)
       
-      # Check for gyrate/Rg indicators
-      if (grepl("@.*title.*gyrat", line_lower) || 
-          grepl("@.*ylabel.*rg", line_lower) ||
-          grepl("@ s[0-9].*legend.*rg", line_lower) ||
-          grepl("radius of gyration", line_lower)) {
+      if (grepl("radius of gyration|rg\\(|@.*gyrat", line_lower)) {
         return("rg")
       }
-      
-      # Check for RMSD indicators
-      if (grepl("@.*title.*rmsd", line_lower) || 
-          grepl("@.*ylabel.*rmsd", line_lower) ||
-          grepl("root mean square deviation", line_lower)) {
+      if (grepl("rmsd|root mean square deviation", line_lower)) {
         return("rmsd")
       }
-      
-      # Check for RMSF indicators
-      if (grepl("@.*title.*rmsf", line_lower) || 
-          grepl("@.*ylabel.*rmsf", line_lower) ||
-          grepl("root mean square fluctuation", line_lower)) {
+      if (grepl("rmsf|root mean square fluctuation", line_lower)) {
         return("rmsf")
       }
     }
   }, error = function(e) {
-    # If file reading fails, return unknown
+    # If file reading fails
   })
   
-  return("unknown")
+  return("rmsd")  # Default fallback
 }

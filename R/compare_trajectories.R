@@ -32,9 +32,36 @@ compare_trajectories <- function(files, labels = NULL, colors = NULL,
     colors <- default_colors[seq_along(files)]
   }
   
-  # Auto-detect analysis_type if not provided
+  # FIXED: Auto-detect analysis_type from ALL files, not just first
   if (is.null(analysis_type)) {
-    analysis_type <- .detect_analysis_type(files[1])
+    # Check ALL files for analysis type patterns
+    detected_types <- sapply(files, .detect_analysis_type)
+    
+    # Get most common type among all files
+    type_counts <- table(detected_types)
+    most_common <- names(type_counts)[which.max(type_counts)]
+    
+    # Use the most common type, or default to first if ambiguous
+    if (most_common != "unknown" && length(type_counts) > 0) {
+      analysis_type <- most_common
+    } else {
+      # If all unknown, check file contents of first file
+      analysis_type <- .detect_from_file_content(files[1])
+    }
+    
+    # If still unknown, default based on filename pattern
+    if (analysis_type == "unknown") {
+      # Check if ANY file has "gyrate" in the name
+      if (any(grepl("gyrate|rg", files, ignore.case = TRUE))) {
+        analysis_type <- "rg"
+      } else if (any(grepl("rmsd", files, ignore.case = TRUE))) {
+        analysis_type <- "rmsd"
+      } else if (any(grepl("rmsf", files, ignore.case = TRUE))) {
+        analysis_type <- "rmsf"
+      } else {
+        analysis_type <- "rmsd"  # Ultimate fallback
+      }
+    }
   }
   
   # Set default axis labels if not provided
@@ -88,18 +115,14 @@ compare_trajectories <- function(files, labels = NULL, colors = NULL,
   return(p)
 }
 
-#' Helper function to detect analysis type from file
+#' Helper function to detect analysis type from filename
 #' @param file_path Path to the file
 #' @return Analysis type as string
 #' @noRd
 .detect_analysis_type <- function(file_path) {
-  # Extract filename without path
   filename <- basename(file_path)
-  
-  # Convert to lowercase for case-insensitive matching
   filename_lower <- tolower(filename)
   
-  # Check for keywords in filename
   if (grepl("gyrate|rg|radius", filename_lower)) {
     return("rg")
   } else if (grepl("rmsd", filename_lower)) {
@@ -110,30 +133,51 @@ compare_trajectories <- function(files, labels = NULL, colors = NULL,
     return("sasa")
   } else if (grepl("hbond|hydrogen", filename_lower)) {
     return("hbond")
+  } else {
+    return("unknown")
   }
-  
-  # Try reading file header for detection
+}
+
+#' Helper function to detect analysis type from file content
+#' @param file_path Path to the file
+#' @return Analysis type as string
+#' @noRd
+.detect_from_file_content <- function(file_path) {
   tryCatch({
     # Read first few lines to check for headers
     con <- file(file_path, "r")
-    first_lines <- readLines(con, n = 10)
+    first_lines <- readLines(con, n = 20)
     close(con)
     
     # Check for @ lines in .xvg files
     for (line in first_lines) {
-      if (grepl("@.*title.*gyrat", line, ignore.case = TRUE) || 
-          grepl("@.*ylabel.*rg", line, ignore.case = TRUE)) {
+      line_lower <- tolower(line)
+      
+      # Check for gyrate/Rg indicators
+      if (grepl("@.*title.*gyrat", line_lower) || 
+          grepl("@.*ylabel.*rg", line_lower) ||
+          grepl("@ s[0-9].*legend.*rg", line_lower) ||
+          grepl("radius of gyration", line_lower)) {
         return("rg")
       }
-      if (grepl("@.*title.*rmsd", line, ignore.case = TRUE) || 
-          grepl("@.*ylabel.*rmsd", line, ignore.case = TRUE)) {
+      
+      # Check for RMSD indicators
+      if (grepl("@.*title.*rmsd", line_lower) || 
+          grepl("@.*ylabel.*rmsd", line_lower) ||
+          grepl("root mean square deviation", line_lower)) {
         return("rmsd")
+      }
+      
+      # Check for RMSF indicators
+      if (grepl("@.*title.*rmsf", line_lower) || 
+          grepl("@.*ylabel.*rmsf", line_lower) ||
+          grepl("root mean square fluctuation", line_lower)) {
+        return("rmsf")
       }
     }
   }, error = function(e) {
-    # If file reading fails, continue
+    # If file reading fails, return unknown
   })
   
-  # Default to unknown
   return("unknown")
 }

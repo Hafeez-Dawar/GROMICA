@@ -32,29 +32,55 @@ compare_trajectories <- function(files, labels = NULL, colors = NULL,
     colors <- default_colors[seq_along(files)]
   }
   
-  # FIXED: Check ALL files for "gyrate" in filename
-  # This is the CRITICAL FIX for your issue
+  # ------------------------------------------------------------
+  # CRITICAL FIX: Detect analysis type PROPERLY
+  # ------------------------------------------------------------
   if (is.null(analysis_type)) {
-    # Check if ANY file has "gyrate" or "rg" in the name
-    all_filenames <- paste(basename(files), collapse = " ")
+    # Get all filenames in lowercase
+    all_filenames <- tolower(paste(basename(files), collapse = " "))
     
-    if (grepl("gyrate|rg", all_filenames, ignore.case = TRUE)) {
+    # Priority 1: Check for "gyrate" or "rg" in ANY filename
+    if (grepl("gyrate|rg", all_filenames)) {
       analysis_type <- "rg"
-    } else if (grepl("rmsd", all_filenames, ignore.case = TRUE)) {
-      analysis_type <- "rmsd"
-    } else if (grepl("rmsf", all_filenames, ignore.case = TRUE)) {
-      analysis_type <- "rmsf"
-    } else if (grepl("sasa", all_filenames, ignore.case = TRUE)) {
-      analysis_type <- "sasa"
-    } else if (grepl("hbond|hydrogen", all_filenames, ignore.case = TRUE)) {
-      analysis_type <- "hbond"
-    } else {
-      # If no keywords found, check first file's content
-      analysis_type <- .detect_from_file_content(files[1])
+    } 
+    # Priority 2: Check file content headers
+    else {
+      # Read first file's headers
+      con <- file(files[1], "r")
+      headers <- readLines(con, n = 15)
+      close(con)
+      
+      # Look for "radius of gyration" in headers
+      header_text <- tolower(paste(headers, collapse = " "))
+      
+      if (grepl("radius of gyration|radius \\(nm\\)|@.*title.*gyrat", header_text)) {
+        analysis_type <- "rg"
+      } else if (grepl("rmsd|root mean square deviation", header_text)) {
+        analysis_type <- "rmsd"
+      } else if (grepl("rmsf|root mean square fluctuation", header_text)) {
+        analysis_type <- "rmsf"
+      } else if (grepl("sasa|solvent accessible", header_text)) {
+        analysis_type <- "sasa"
+      } else if (grepl("hbond|hydrogen bond", header_text)) {
+        analysis_type <- "hbond"
+      } else {
+        # Default based on data values
+        data <- read_xvg(files[1])
+        y_mean <- mean(data[, 2], na.rm = TRUE)
+        
+        # Rg values are typically 2-4 nm, RMSD is 0-2 nm
+        if (y_mean > 1.8 && y_mean < 5.0) {
+          analysis_type <- "rg"
+        } else {
+          analysis_type <- "rmsd"  # Default fallback
+        }
+      }
     }
   }
   
+  # ------------------------------------------------------------
   # Set default axis labels if not provided
+  # ------------------------------------------------------------
   if (is.null(xlab)) {
     xlab <- if (analysis_type == "rmsf") "Residue Number" else "Time (ns)"
   }
@@ -63,13 +89,15 @@ compare_trajectories <- function(files, labels = NULL, colors = NULL,
     ylab <- switch(analysis_type,
                    rmsd = "RMSD (nm)",
                    rmsf = "RMSF (nm)",
-                   rg = "Rg (nm)",
+                   rg = "Rg (nm)",            # This WILL be used for gyrate files
                    sasa = "SASA (nm²)",
                    hbond = "Number of H-bonds",
                    "Value")
   }
   
+  # ------------------------------------------------------------
   # Set default title if not provided
+  # ------------------------------------------------------------
   if (is.null(title)) {
     title <- switch(analysis_type,
                    rmsd = "RMSD Comparison",
@@ -80,57 +108,49 @@ compare_trajectories <- function(files, labels = NULL, colors = NULL,
                    "Trajectory Comparison")
   }
   
+  # ------------------------------------------------------------
   # Read and combine data from all files
+  # ------------------------------------------------------------
   combined <- data.frame()
   for (i in seq_along(files)) {
+    # Read the file
     temp <- read_xvg(files[i])
-    temp$Trajectory <- labels[i]
-    colnames(temp)[1:2] <- c("X", "Y")
-    combined <- rbind(combined, temp)
+    
+    # For Rg files, use only Time (col1) and Total Rg (col2)
+    # Other files use first two columns
+    temp_df <- data.frame(
+      X = temp[, 1],          # Time or Residue Number
+      Y = temp[, 2],          # Main value (Rg, RMSD, etc.)
+      Trajectory = labels[i]
+    )
+    
+    combined <- rbind(combined, temp_df)
   }
   
+  # Factorize trajectory labels to maintain order
   combined$Trajectory <- factor(combined$Trajectory, levels = labels)
   
-  # Create plot
+  # ------------------------------------------------------------
+  # Create the plot
+  # ------------------------------------------------------------
   p <- ggplot2::ggplot(combined, ggplot2::aes(x = X, y = Y, color = Trajectory)) +
     ggplot2::geom_line(linewidth = linewidth) +
     ggplot2::scale_color_manual(values = setNames(colors, labels)) +
-    ggplot2::labs(title = title, x = xlab, y = ylab, color = "Trajectory") +
+    ggplot2::labs(
+      title = title,
+      x = xlab,
+      y = ylab,
+      color = "Trajectory"
+    ) +
     ggplot2::theme_classic() +
     ggplot2::theme(
-      plot.title = ggplot2::element_text(hjust = 0.5, size = 14, face = "bold"),
+      plot.title = ggplot2::element_text(
+        hjust = 0.5,
+        size = 14,
+        face = "bold"
+      ),
       legend.position = legend_position
     )
   
   return(p)
-}
-
-#' Helper function to detect analysis type from file content
-#' @param file_path Path to the file
-#' @return Analysis type as string
-#' @noRd
-.detect_from_file_content <- function(file_path) {
-  tryCatch({
-    con <- file(file_path, "r")
-    first_lines <- readLines(con, n = 20)
-    close(con)
-    
-    for (line in first_lines) {
-      line_lower <- tolower(line)
-      
-      if (grepl("radius of gyration|rg\\(|@.*gyrat", line_lower)) {
-        return("rg")
-      }
-      if (grepl("rmsd|root mean square deviation", line_lower)) {
-        return("rmsd")
-      }
-      if (grepl("rmsf|root mean square fluctuation", line_lower)) {
-        return("rmsf")
-      }
-    }
-  }, error = function(e) {
-    # If file reading fails
-  })
-  
-  return("rmsd")  # Default fallback
 }

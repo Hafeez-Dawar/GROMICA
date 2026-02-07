@@ -18,20 +18,6 @@ compare_trajectories <- function(files, labels = NULL, colors = NULL,
                                  legend_position = "right") {
   
   # ============================================================
-  # AUTO-DETECT Rg FOR GYRATE FILES
-  # ============================================================
-  
-  # Check if ANY file has "gyrate" in the name
-  has_gyrate <- any(grepl("gyrate", basename(files), ignore.case = TRUE))
-  
-  if (has_gyrate && is.null(analysis_type)) {
-    # Auto-set for gyrate files
-    analysis_type <- "rg"
-    if (is.null(ylab)) ylab <- "Rg (nm)"
-    if (is.null(xlab)) xlab <- "Time (ns)"
-  }
-  
-  # ============================================================
   # VALIDATION
   # ============================================================
   if (length(files) < 2) stop("At least 2 files required")
@@ -41,7 +27,81 @@ compare_trajectories <- function(files, labels = NULL, colors = NULL,
   if (length(missing) > 0) stop(paste("Files not found:", paste(missing, collapse = ", ")))
   
   # ============================================================
-  # SET DEFAULTS
+  # AUTO-DETECT ANALYSIS TYPE FROM FIRST FILE (if not specified)
+  # ============================================================
+  
+  if (is.null(analysis_type)) {
+    # Read first file to detect data pattern
+    first_data <- read_xvg(files[1])
+    
+    # Check data characteristics to determine type
+    if (ncol(first_data) >= 2) {
+      x_vals <- first_data[, 1]
+      y_vals <- first_data[, 2]
+      
+      # Check if it's RMSF (residue-based data)
+      # RMSF typically has integer residue numbers and values around 0.1-1.0 nm
+      is_rmsf <- all(x_vals == round(x_vals)) && 
+                 all(y_vals >= 0) && all(y_vals <= 5) &&
+                 length(x_vals) > 10  # More than 10 residues
+      
+      # Check if it's Rg data (gyrate files)
+      # Rg values typically between 1-10 nm
+      is_rg <- all(y_vals >= 0.5) && all(y_vals <= 20) && 
+               grepl("gyrate", basename(files[1]), ignore.case = TRUE)
+      
+      # Check if it's SASA data
+      # SASA values typically between 0-1000 nm²
+      is_sasa <- all(y_vals >= 0) && all(y_vals <= 2000) &&
+                 grepl("sasa", basename(files[1]), ignore.case = TRUE)
+      
+      # Check if it's RMSD data
+      # RMSD typically starts at 0 and increases
+      is_rmsd <- y_vals[1] < 0.5 && max(y_vals) > 0.5 &&
+                 grepl("rmsd", basename(files[1]), ignore.case = TRUE)
+      
+      # Check if it's HBond data
+      # HBond counts are typically integers
+      is_hbond <- all(y_vals == round(y_vals)) && 
+                  all(y_vals >= 0) && all(y_vals <= 100) &&
+                  grepl("hbond|hbnum", basename(files[1]), ignore.case = TRUE)
+      
+      # Determine analysis type based on checks
+      if (is_rmsf) {
+        analysis_type <- "rmsf"
+      } else if (is_rg) {
+        analysis_type <- "rg"
+      } else if (is_sasa) {
+        analysis_type <- "sasa"
+      } else if (is_hbond) {
+        analysis_type <- "hbond"
+      } else if (is_rmsd) {
+        analysis_type <- "rmsd"
+      } else {
+        # Try filename pattern as fallback
+        fname <- tolower(basename(files[1]))
+        if (grepl("rmsf", fname)) {
+          analysis_type <- "rmsf"
+        } else if (grepl("gyrate|rg", fname)) {
+          analysis_type <- "rg"
+        } else if (grepl("sasa", fname)) {
+          analysis_type <- "sasa"
+        } else if (grepl("hbond|hbnum", fname)) {
+          analysis_type <- "hbond"
+        } else if (grepl("rmsd", fname)) {
+          analysis_type <- "rmsd"
+        } else {
+          analysis_type <- "rmsd"  # Default fallback
+          warning("Could not auto-detect analysis type. Defaulting to 'rmsd'. Specify 'analysis_type' parameter to avoid this.")
+        }
+      }
+    } else {
+      analysis_type <- "rmsd"  # Default fallback
+    }
+  }
+  
+  # ============================================================
+  # SET DEFAULTS BASED ON ANALYSIS TYPE
   # ============================================================
   if (is.null(labels)) labels <- paste("Trajectory", seq_along(files))
   if (is.null(colors)) {
@@ -50,12 +110,12 @@ compare_trajectories <- function(files, labels = NULL, colors = NULL,
     colors <- default_colors[seq_along(files)]
   }
   
-  if (is.null(analysis_type)) analysis_type <- "rmsd"
-  
+  # Set x-axis label
   if (is.null(xlab)) {
     xlab <- if (analysis_type == "rmsf") "Residue Number" else "Time (ns)"
   }
   
+  # Set y-axis label
   if (is.null(ylab)) {
     ylab <- switch(analysis_type,
                    rmsd = "RMSD (nm)",
@@ -66,6 +126,7 @@ compare_trajectories <- function(files, labels = NULL, colors = NULL,
                    "Value")
   }
   
+  # Set title
   if (is.null(title)) {
     title <- switch(analysis_type,
                    rmsd = "RMSD Comparison",
